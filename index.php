@@ -6,7 +6,6 @@ $total_income = get_total_income();
 $total_expenses = get_total_expenses();
 $balance = get_balance();
 $recent_transactions = get_recent_transactions(10);
-$balance_data = get_daily_balance(30);
 
 // Prepare data for transaction chart
 $dates = [];
@@ -14,14 +13,6 @@ $amounts = [];
 foreach ($recent_transactions as $transaction) {
     $dates[] = $transaction['date'];
     $amounts[] = $transaction['type'] == 'income' ? $transaction['amount'] : -$transaction['amount'];
-}
-
-// Prepare data for balance chart
-$balance_dates = [];
-$balance_amounts = [];
-foreach ($balance_data as $data) {
-    $balance_dates[] = $data['date'];
-    $balance_amounts[] = $data['balance'];
 }
 ?>
 
@@ -91,28 +82,6 @@ foreach ($balance_data as $data) {
                 scales: {
                     y: {
                         beginAtZero: true
-                    }
-                }
-            }
-        });
-        var balanceCtx = document.getElementById('balanceChart').getContext('2d');
-        var balanceChart = new Chart(balanceCtx, {
-            type: 'line',
-            data: {
-                labels: <?php echo json_encode($balance_dates); ?>,
-                datasets: [{
-                    label: 'Balance',
-                    data: <?php echo json_encode($balance_amounts); ?>,
-                    fill: false,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: false
                     }
                 }
             }

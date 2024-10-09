@@ -50,28 +50,3 @@ function get_recent_transactions($limit = 5) {
     return mysqli_fetch_all($result, MYSQLI_ASSOC);
 }
 
-function get_daily_balance($days = 30) {
-    global $conn;
-    $sql = "SELECT DATE(date) as date, 
-                   SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END) as daily_balance
-            FROM expenses
-            WHERE date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-            GROUP BY DATE(date)
-            ORDER BY date";
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "i", $days);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
-    $daily_balance = mysqli_fetch_all($result, MYSQLI_ASSOC);
-
-    $running_balance = 0;
-    $balance_data = [];
-    foreach ($daily_balance as $day) {
-        $running_balance += $day['daily_balance'];
-        $balance_data[] = [
-            'date' => $day['date'],
-            'balance' => $running_balance
-        ];
-    }
-    return $balance_data;
-}
