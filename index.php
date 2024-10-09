@@ -2,7 +2,27 @@
 require_once 'includes/db.php';
 require_once 'includes/functions.php';
 
-$expenses = get_expenses();
+$total_income = get_total_income();
+$total_expenses = get_total_expenses();
+$balance = get_balance();
+$recent_transactions = get_recent_transactions(10);
+$balance_data = get_daily_balance(30);
+
+// Prepare data for transaction chart
+$dates = [];
+$amounts = [];
+foreach ($recent_transactions as $transaction) {
+    $dates[] = $transaction['date'];
+    $amounts[] = $transaction['type'] == 'income' ? $transaction['amount'] : -$transaction['amount'];
+}
+
+// Prepare data for balance chart
+$balance_dates = [];
+$balance_amounts = [];
+foreach ($balance_data as $data) {
+    $balance_dates[] = $data['date'];
+    $balance_amounts[] = $data['balance'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -10,56 +30,95 @@ $expenses = get_expenses();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expense Tracker</title>
+    <title>Dashboard - W-Tracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>Expense Tracker</h1>
-        <div class="add-expense">
-            <h2>Add New Expense</h2>
-            <form action="add_expense.php" method="post">
-                <input type="number" name="amount" placeholder="Amount" required>
-                <input type="text" name="description" placeholder="Description" required>
-                <select name="category" required>
-                    <option value="">Select Category</option>
-                    <option value="Food">Food</option>
-                    <option value="Transportation">Transportation</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Other">Other</option>
-                </select>
-                <input type="date" name="date" required>
-                <button type="submit">Add Expense</button>
-            </form>
-        </div>
-        <div class="expense-list">
-            <h2>Expense List</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Description</th>
-                        <th>Category</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($expenses as $expense): ?>
-                    <tr>
-                        <td><?php echo $expense['date']; ?></td>
-                        <td>$<?php echo number_format($expense['amount'], 2); ?></td>
-                        <td><?php echo $expense['description']; ?></td>
-                        <td><?php echo $expense['category']; ?></td>
-                        <td>
-                            <a href="delete_expense.php?id=<?php echo $expense['id']; ?>" class="delete-btn">Delete</a>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+        <?php include 'includes/sidebar.php'; ?>
+        <div class="content">
+            <h1>Dashboard</h1>
+            <div class="dashboard-summary">
+                <div class="summary-box income">
+                    <i class="bi bi-piggy-bank"></i>
+                    <h2>Total Income</h2>
+                    <p>RP. <?php echo number_format($total_income, 3); ?></p>
+                </div>
+                <div class="summary-box expenses">
+                    <i class="bi bi-cash-stack"></i>
+                    <h2>Total Expenses</h2>
+                    <p>Rp. <?php echo number_format($total_expenses, 3); ?></p>
+                </div>
+                <div class="summary-box balance">
+                    <i class="bi bi-wallet2"></i>
+                    <h2>Balance</h2>
+                    <p>Rp. <?php echo number_format($balance, 3); ?></p>
+                </div>
+            </div>
+            <div class="recent-transactions">
+                <h2>Recent Transactions</h2>
+                <canvas id="transactionChart"></canvas>
+            </div>
         </div>
     </div>
+    <script>
+        // Chart
+        var ctx = document.getElementById('transactionChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode(array_reverse($dates)); ?>,
+                datasets: [{
+                    label: 'Transaction Amount',
+                    data: <?php echo json_encode(array_reverse($amounts)); ?>,
+                    backgroundColor: function(context) {
+                        var index = context.dataIndex;
+                        var value = context.dataset.data[index];
+                        return value < 0 ? 'rgba(255, 99, 132, 0.5)' : 'rgba(75, 192, 192, 0.5)';
+                    },
+                    borderColor: function(context) {
+                        var index = context.dataIndex;
+                        var value = context.dataset.data[index];
+                        return value < 0 ? 'rgb(255, 99, 132)' : 'rgb(75, 192, 192)';
+                    },
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        var balanceCtx = document.getElementById('balanceChart').getContext('2d');
+        var balanceChart = new Chart(balanceCtx, {
+            type: 'line',
+            data: {
+                labels: <?php echo json_encode($balance_dates); ?>,
+                datasets: [{
+                    label: 'Balance',
+                    data: <?php echo json_encode($balance_amounts); ?>,
+                    fill: false,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    </script>
     <script src="js/script.js"></script>
 </body>
 </html>
+
