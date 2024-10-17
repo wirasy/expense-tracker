@@ -2,6 +2,13 @@
 require_once 'includes/db.php';
 require_once 'includes/functions.php';
 
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error_message'] = "You must be logged in to access this page.";
+    header('Location: login.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $amount = $_POST['amount'];
     $description = $_POST['description'];
@@ -28,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container">
-        <?php include 'includes/sidebar.php'; ?>
+    <?php include 'includes/sidebar.php'; ?>
         <div class="content">
             <h1>Add Transaction</h1>
             <?php if (isset($success_message)): ?>

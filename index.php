@@ -1,4 +1,11 @@
 <?php
+
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error_message'] = "You must be logged in to access this page.";
+    header('Location: auth/login.php');
+    exit;
+}
 require_once 'includes/db.php';
 require_once 'includes/functions.php';
 
@@ -6,6 +13,7 @@ $total_income = get_total_income();
 $total_expenses = get_total_expenses();
 $balance = get_balance();
 $recent_transactions = get_recent_transactions(10);
+$total_transactions = get_total_transactions();
 
 // Prepare data for transaction chart
 $dates = [];
@@ -46,6 +54,11 @@ foreach ($recent_transactions as $transaction) {
                     <i class="bi bi-wallet2"></i>
                     <h2>Balance</h2>
                     <p>Rp. <?php echo number_format($balance, 3); ?></p>
+                </div>
+                <div class="summary-box total-transactions">
+                    <i class="bi bi-list-ul"></i>
+                    <h2>Total Transactions</h2>
+                    <p><?php echo $total_transactions; ?></p>
                 </div>
             </div>
             <div class="recent-transactions">
@@ -90,4 +103,3 @@ foreach ($recent_transactions as $transaction) {
     <script src="js/script.js"></script>
 </body>
 </html>
-
