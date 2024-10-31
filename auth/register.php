@@ -33,23 +33,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
 </head>
-<body>
-    <div class="container">
-        <?php include '../includes/sidebar.php'; ?>
-        <div class="content">
-            <h1>Register</h1>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <i class="bi bi-wallet2"></i>
+                <h1>Create Account</h1>
+                <p>Start managing your finances today</p>
+            </div>
+
             <?php if ($error_message): ?>
-                <p class="error"><?php echo $error_message; ?></p>
+                <div class="alert error"><?php echo $error_message; ?></div>
             <?php endif; ?>
-            <form action="register.php" method="post">
-                <input type="text" name="username" placeholder="Username" required autocomplete="off">
-                <input type="password" name="password" placeholder="Password" required autocomplete="off">
-                <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-                <button type="submit">Register</button>
+
+            <form action="register.php" method="post" class="auth-form">
+                <div class="form-group">
+                    <div class="input-icon">
+                        <i class="bi bi-person"></i>
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-icon">
+                        <i class="bi bi-lock"></i>
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-icon">
+                        <i class="bi bi-lock-fill"></i>
+                        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-button">Register</button>
             </form>
-            <p>Already have an account? <a href="login.php">Login here</a></p>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="login.php">Login here</a></p>
+            </div>
         </div>
     </div>
-    <script src="js/script.js"></script>
 </body>
 </html>

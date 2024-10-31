@@ -23,35 +23,41 @@ $expenses = get_expenses();
     <div class="container">
         <?php include 'includes/sidebar.php'; ?>
         <div class="content">
-            <h1>Transaction History</h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Description</th>
-                        <th>Category</th>
-                        <th>Type</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="history-container">
+                <div class="history-header">
+                    <h1>Transaction History</h1>
+                </div>
+
+                <div class="transaction-list">
                     <?php foreach ($expenses as $expense): ?>
-                    <tr class="<?php echo $expense['type']; ?>">
-                        <td><?php echo $expense['date']; ?></td>
-                        <td>Rp. <?php echo number_format($expense['amount'], 3); ?></td>
-                        <td><?php echo $expense['description']; ?></td>
-                        <td><?php echo $expense['category']; ?></td>
-                        <td><?php echo ucfirst($expense['type']); ?></td>
-                        <td>
-                            <a href="delete_transaction.php?id=<?php echo $expense['id']; ?>" class="delete-btn">Delete</a>
-                        </td>
-                    </tr>
+                    <div class="transaction-card <?php echo $expense['type']; ?>">
+                        <div class="transaction-icon">
+                            <i class="bi <?php echo $expense['type'] == 'income' ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'; ?>"></i>
+                        </div>
+                        <div class="transaction-details">
+                            <h3><?php echo $expense['description']; ?></h3>
+                            <span class="category"><?php echo $expense['category']; ?></span>
+                            <span class="date"><?php echo date('d M Y', strtotime($expense['date'])); ?></span>
+                        </div>
+                        <div class="transaction-amount <?php echo $expense['type']; ?>">
+                            <span>Rp. <?php echo number_format($expense['amount'], 3); ?></span>
+                        </div>
+                        <div class="transaction-actions">
+                            <a href="edit_transaction.php?id=<?php echo $expense['id']; ?>" class="edit-btn">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+                            <a href="delete_transaction.php?id=<?php echo $expense['id']; ?>" class="delete-btn" onclick="return confirm('Are you sure you want to delete this transaction?')">
+                                <i class="bi bi-trash-fill"></i>
+                            </a>
+                        </div>
+                    </div>
                     <?php endforeach; ?>
-                </tbody>
-            </table>
+                </div>
+            </div>
         </div>
     </div>
+
     <script src="js/script.js"></script>
 </body>
 </html>
+

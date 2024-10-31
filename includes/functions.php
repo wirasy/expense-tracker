@@ -63,6 +63,32 @@ function delete_expense($id) {
     return mysqli_stmt_execute($stmt);
 }
 
+function get_transaction_by_id($id) {
+    global $conn;
+    $user_id = $_SESSION['user_id'];
+    
+    $sql = "SELECT * FROM expenses WHERE id = ? AND user_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "ii", $id, $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    return mysqli_fetch_assoc($result);
+}
+
+function update_transaction($id, $amount, $description, $category, $date, $type) {
+    global $conn;
+    $user_id = $_SESSION['user_id'];
+    
+    $sql = "UPDATE expenses SET amount = ?, description = ?, category = ?, date = ?, type = ? 
+            WHERE id = ? AND user_id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "dssssii", $amount, $description, $category, $date, $type, $id, $user_id);
+    
+    return mysqli_stmt_execute($stmt);
+}
+
+
 function get_total_transactions() {
     global $conn;
     $user_id = $_SESSION['user_id']; // Assuming the user_id is stored in the session

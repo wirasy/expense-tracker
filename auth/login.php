@@ -46,24 +46,46 @@ if (isset($_SESSION['error_message'])) {
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
 </head>
-<body>
-    <div class="container">
-        <?php include '../includes/sidebar.php'; ?>
-        <div class="content">
-            <h1>Login</h1>
+<body class="auth-body">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <i class="bi bi-wallet2"></i>
+                <h1>Welcome Back!</h1>
+                <p>Please login to your account</p>
+            </div>
+
             <?php if ($success_message): ?>
-                <p class="success"><?php echo $success_message; ?></p>
+                <div class="alert success"><?php echo $success_message; ?></div>
             <?php endif; ?>
+            
             <?php if ($error_message): ?>
-                <p class="error"><?php echo $error_message; ?></p>
+                <div class="alert error"><?php echo $error_message; ?></div>
             <?php endif; ?>
-            <form action="login.php" method="post">
-                <input type="text" name="username" placeholder="Username" required autocomplete="off">
-                <input type="password" name="password" placeholder="Password" required autocomplete="off">
-                <button type="submit">Login</button>
+
+            <form action="login.php" method="post" class="auth-form">
+                <div class="form-group">
+                    <div class="input-icon">
+                        <i class="bi bi-person"></i>
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-icon">
+                        <i class="bi bi-lock"></i>
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-button">Login</button>
             </form>
+
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="register.php">Register here</a></p>
+            </div>
         </div>
     </div>
-    <script src="js/script.js"></script>
 </body>
 </html>
+
