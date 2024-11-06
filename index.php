@@ -30,7 +30,7 @@ foreach ($recent_transactions as $transaction) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - W-Tracker</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -61,16 +61,22 @@ foreach ($recent_transactions as $transaction) {
                     <p><?php echo $total_transactions; ?></p>
                 </div>
             </div>
-            <div class="recent-transactions">
-                <h2>Recent Transactions</h2>
-                <canvas id="transactionChart"></canvas>
+            <div class="chart-container">
+            <div class="transaction-chart-box">
+            <h2>Recent Transactions</h2>
+            <canvas id="transactionChart"></canvas>
             </div>
+            <div class="balance-chart-box">
+            <h2>Balance Overview</h2>
+            <canvas id="balanceChart"></canvas>
+    </div>
+</div>
         </div>
     </div>
     <script>
-        // Chart
-        var ctx = document.getElementById('transactionChart').getContext('2d');
-        var chart = new Chart(ctx, {
+       // Transaction Chart
+        const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+        const transactionChart = new Chart(transactionCtx, {
             type: 'bar',
             data: {
                 labels: <?php echo json_encode(array_reverse($dates)); ?>,
@@ -78,23 +84,70 @@ foreach ($recent_transactions as $transaction) {
                     label: 'Transaction Amount',
                     data: <?php echo json_encode(array_reverse($amounts)); ?>,
                     backgroundColor: function(context) {
-                        var index = context.dataIndex;
-                        var value = context.dataset.data[index];
-                        return value < 0 ? 'rgba(255, 99, 132, 0.5)' : 'rgba(75, 192, 192, 0.5)';
+                        const value = context.dataset.data[context.dataIndex];
+                        return value < 0 ? 'rgba(231, 76, 60, 0.8)' : 'rgba(46, 204, 113, 0.8)';
                     },
                     borderColor: function(context) {
-                        var index = context.dataIndex;
-                        var value = context.dataset.data[index];
-                        return value < 0 ? 'rgb(255, 99, 132)' : 'rgb(75, 192, 192)';
+                        const value = context.dataset.data[context.dataIndex];
+                        return value < 0 ? 'rgba(231, 76, 60, 1)' : 'rgba(46, 204, 113, 1)';
                     },
+                    borderWidth: 1,
+                    barThickness: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        //Chart Balance
+        const balanceCtx = document.getElementById('balanceChart').getContext('2d');
+        const balanceChart = new Chart(balanceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Income', 'Expenses'],
+                datasets: [{
+                    data: [<?php echo $total_income; ?>, <?php echo $total_expenses; ?>],
+                    backgroundColor: [
+                        'rgba(46, 204, 113, 0.8)',
+                        'rgba(231, 76, 60, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(46, 204, 113, 1)',
+                        'rgba(231, 76, 60, 1)'
+                    ],
                     borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    title: {
+                        display: true,
                     }
                 }
             }
