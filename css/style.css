@@ -404,6 +404,7 @@ button:hover {
 }
 
 
+/**Sidebar**/
 .container {
     display: flex;
     min-height: 100vh;
@@ -469,7 +470,61 @@ button:hover {
     padding: 20px;
     transition: all 0.3s;
 }
+.user-profile {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
+.profile-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-image i {
+    font-size: 30px;
+    color: #fff;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.username {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    display: block;
+}
+
+.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dropdown-menu {
+    display: none;
+    padding-left: 20px;
+    margin-top: 5px;
+}
+
+.dropdown-menu.active {
+    display: block;
+}
+
+.dropdown-menu li a {
+    padding: 8px 15px;
+    font-size: 14px;
+}
 @media (max-width: 768px) {
     .sidebar {
         width: 70px;
@@ -495,7 +550,18 @@ button:hover {
     .content {
         margin-left: 70px;
     }
+    .user-profile {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .username {
+        margin-top: 10px;
+    }
 }
+
+
+/*Box*/
 
 .content {
     flex: 1;
@@ -849,5 +915,57 @@ table tr.expense {
     }
 }
 
+/* Change Pw Styles */
+.password-container {
+    padding: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.password-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.password-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.password-header i {
+    font-size: 48px;
+    color: #3498db;
+}
+.password-form {
+    max-width: 500px;
+    margin: 0 auto;
+}
+.change-btn {
+    width: 100%;
+    padding: 12px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+.change-btn:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    
+    .password-container {
+        padding: 15px;
+    }
+    
+    .password-card {
+        padding: 20px;
+    }
+}
 
 

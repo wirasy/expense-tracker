@@ -107,6 +107,29 @@ $expenses = get_total_expenses();
 return $income - $expenses;
 }
 
+function change_user_password($user_id, $current_password, $new_password) {
+    global $conn;
+    
+    // Verify current password
+    $sql = "SELECT password FROM users WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = mysqli_fetch_assoc($result);
+    
+    if (password_verify($current_password, $user['password'])) {
+        // Update to new password
+        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+        $sql = "UPDATE users SET password = ? WHERE id = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "si", $hashed_password, $user_id);
+        return mysqli_stmt_execute($stmt);
+    }
+    
+    return false;
+}
+
 function login($username, $password) {
     global $conn;
     
@@ -184,4 +207,23 @@ function register($username, $password) {
     }
     
     return false;
+}
+
+
+//Admin Functions 
+function is_admin($user_id) {
+    global $conn;
+    $stmt = mysqli_prepare($conn, "SELECT is_admin FROM users WHERE id = ?");
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = mysqli_fetch_assoc($result);
+    return isset($user['is_admin']) && $user['is_admin'] == 1;
+}
+
+function get_all_users() {
+    global $conn;
+    $sql = "SELECT * FROM users ORDER BY created_at DESC";
+    $result = mysqli_query($conn, $sql);
+    return mysqli_fetch_all($result, MYSQLI_ASSOC);
 }

@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
+    
     if ($password !== $confirm_password) {
         $error_message = "Passwords do not match.";
     } else {
