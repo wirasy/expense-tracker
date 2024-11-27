@@ -104,7 +104,7 @@ foreach ($recent_transactions as $transaction) {
                     },
                     title: {
                         display: true,
-                    }
+                     }
                 },
                 scales: {
                     y: {

@@ -136,6 +136,17 @@ function login($username, $password) {
     // Prepare the SQL statement
     $sql = "SELECT id, username, password FROM users WHERE username = ?";
     $stmt = mysqli_prepare($conn, $sql);
+
+    // In the login function, add admin check
+    if (login($username, $password)) {
+         if (is_admin($_SESSION['user_id'])) {
+            header("Location: ../admin/dashboard.php");
+            } else {
+            header("Location: ../index.php");
+        }
+        exit;
+    }
+
     
     if ($stmt) {
         // Bind the username parameter
@@ -210,20 +221,37 @@ function register($username, $password) {
 }
 
 
-//Admin Functions 
 function is_admin($user_id) {
     global $conn;
-    $stmt = mysqli_prepare($conn, "SELECT is_admin FROM users WHERE id = ?");
+    $sql = "SELECT is_admin FROM users WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
     mysqli_stmt_bind_param($stmt, "i", $user_id);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
     $user = mysqli_fetch_assoc($result);
-    return isset($user['is_admin']) && $user['is_admin'] == 1;
+    return $user['is_admin'] == 1;
 }
 
 function get_all_users() {
     global $conn;
-    $sql = "SELECT * FROM users ORDER BY created_at DESC";
+    $sql = "SELECT id, username, is_admin FROM users";
     $result = mysqli_query($conn, $sql);
     return mysqli_fetch_all($result, MYSQLI_ASSOC);
 }
+
+function delete_user($user_id) {
+    global $conn;
+    $sql = "DELETE FROM users WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    return mysqli_stmt_execute($stmt);
+}
+
+function update_user($user_id, $username, $is_admin) {
+    global $conn;
+    $sql = "UPDATE users SET username = ?, is_admin = ? WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "sii", $username, $is_admin, $user_id);
+    return mysqli_stmt_execute($stmt);
+}
+

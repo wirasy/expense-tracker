@@ -1,3 +1,4 @@
+// Login 
 <?php
 session_start();
 
@@ -89,6 +90,7 @@ if (isset($_SESSION['error_message'])) {
 </body>
 </html>
 
+// Register
 <?php
 session_start();
 require_once '../includes/db.php';
@@ -101,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
 
+    
     if ($password !== $confirm_password) {
         $error_message = "Passwords do not match.";
     } else {
@@ -170,12 +173,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </body>
 </html>
 
+// Config
 <?php
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'expense_tracker');
 
+// DB
 <?php
 require_once 'config.php';
 
@@ -185,423 +190,7 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
 }
 
-<?php
-// Start the session if it hasn't been started already
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-?>
-
-<div class="sidebar">
-    <h2><i class="bi bi-wallet2"></i> W-Tracker</h2>
-    <ul>
-        <?php if (isset($_SESSION['user_id'])): ?>
-            <li><a href="index.php"><i class="bi bi-speedometer2"></i> <span>Dashboard</span></a></li>
-            <li><a href="add_transaction.php"><i class="bi bi-plus-circle"></i> <span>Add Transaction</span></a></li>
-            <li><a href="transaction_history.php"><i class="bi bi-clock-history"></i> <span>Transaction History</span></a></li>
-            <li><a href="./auth/logout.php" class="logout-btn"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></a></li>
-        <?php else: ?>
-            <li><a href="../auth/login.php" class="login-btn"><i class="bi bi-box-arrow-in-right"></i> <span>Login</span></a></li>
-            <li><a href="../auth/register.php" class="register-btn"><i class="bi bi-person-plus"></i> <span>Register</span></a></li>
-        <?php endif; ?>
-    </ul>
-</div>
-
-<?php
-
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    $_SESSION['error_message'] = "You must be logged in to access this page.";
-    header('Location: auth/login.php');
-    exit;
-}
-require_once 'includes/db.php';
-require_once 'includes/functions.php';
-
-$total_income = get_total_income();
-$total_expenses = get_total_expenses();
-$balance = get_balance();
-$recent_transactions = get_recent_transactions(10);
-$total_transactions = get_total_transactions();
-
-// Prepare data for transaction chart
-$dates = [];
-$amounts = [];
-foreach ($recent_transactions as $transaction) {
-    $dates[] = $transaction['date'];
-    $amounts[] = $transaction['type'] == 'income' ? $transaction['amount'] : -$transaction['amount'];
-}
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - W-Tracker</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    <div class="container">
-        <?php include 'includes/sidebar.php'; ?>
-        <div class="content">
-            <h1>Dashboard</h1>
-            <div class="dashboard-summary">
-                <div class="summary-box income">
-                    <i class="bi bi-piggy-bank"></i>
-                    <h2>Total Income</h2>
-                    <p>RP. <?php echo number_format($total_income, 3); ?></p>
-                </div>
-                <div class="summary-box expenses">
-                    <i class="bi bi-cash-stack"></i>
-                    <h2>Total Expenses</h2>
-                    <p>Rp. <?php echo number_format($total_expenses, 3); ?></p>
-                </div>
-                <div class="summary-box balance">
-                    <i class="bi bi-wallet2"></i>
-                    <h2>Balance</h2>
-                    <p>Rp. <?php echo number_format($balance, 3); ?></p>
-                </div>
-                <div class="summary-box total-transactions">
-                    <i class="bi bi-list-ul"></i>
-                    <h2>Total Transactions</h2>
-                    <p><?php echo $total_transactions; ?></p>
-                </div>
-            </div>
-            <div class="recent-transactions">
-                <h2>Recent Transactions</h2>
-                <canvas id="transactionChart"></canvas>
-            </div>
-        </div>
-    </div>
-    <script>
-        // Chart
-        var ctx = document.getElementById('transactionChart').getContext('2d');
-        var chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: <?php echo json_encode(array_reverse($dates)); ?>,
-                datasets: [{
-                    label: 'Transaction Amount',
-                    data: <?php echo json_encode(array_reverse($amounts)); ?>,
-                    backgroundColor: function(context) {
-                        var index = context.dataIndex;
-                        var value = context.dataset.data[index];
-                        return value < 0 ? 'rgba(255, 99, 132, 0.5)' : 'rgba(75, 192, 192, 0.5)';
-                    },
-                    borderColor: function(context) {
-                        var index = context.dataIndex;
-                        var value = context.dataset.data[index];
-                        return value < 0 ? 'rgb(255, 99, 132)' : 'rgb(75, 192, 192)';
-                    },
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    </script>
-    <script src="js/script.js"></script>
-</body>
-</html>
-
-<?php
-require_once 'includes/db.php';
-require_once 'includes/functions.php';
-
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    $_SESSION['error_message'] = "You must be logged in to access this page.";
-    header('Location: login.php');
-    exit;
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $amount = $_POST['amount'];
-    $description = $_POST['description'];
-    $category = $_POST['category'];
-    $date = $_POST['date'];
-    $type = $_POST['type'];
-
-    if (add_transaction($amount, $description, $category, $date, $type)) {
-        $success_message = "Transaction added successfully.";
-    } else {
-        $error_message = "Error adding transaction.";
-    }
-}
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Transaction - W-Tracker</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-<body>
-<div class="container">
-    <?php include 'includes/sidebar.php'; ?>
-    <div class="content">
-        <div class="form-container">
-            <div class="form-card">
-                <h1>Add Transaction</h1>
-                <?php if (isset($success_message)): ?>
-                    <p class="success"><?php echo $success_message; ?></p>
-                <?php endif; ?>
-                <?php if (isset($error_message)): ?>
-                    <p class="error"><?php echo $error_message; ?></p>
-                <?php endif; ?>
-                
-                <form action="add_transaction.php" method="post" class="transaction-form">
-                    <div class="form-group">
-                        <label for="amount">Amount</label>
-                        <input type="number" id="amount" name="amount" placeholder="Enter amount" required step="0.01">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="description">Description</label>
-                        <input type="text" id="description" name="description" placeholder="Enter description" required autocomplete="off">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="category">Category</label>
-                        <select id="category" name="category" required>
-                            <option value="">Select Category</option>
-                            <option value="Food">Food</option>
-                            <option value="Transportation">Transportation</option>
-                            <option value="Entertainment">Entertainment</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="date">Date</label>
-                        <input type="date" id="date" name="date" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="type">Type</label>
-                        <select id="type" name="type" required>
-                            <option value="expense">Expense</option>
-                            <option value="income">Income</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="submit-btn">Add Transaction</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-    <script src="js/script.js"></script>
-</body>
-</html>
-
-
-<?php
-require_once 'includes/db.php';
-require_once 'includes/functions.php';
-
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    $_SESSION['error_message'] = "You must be logged in to access this page.";
-    header('Location: login.php');
-    exit;
-}
-
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-    if (delete_expense($id)) {
-        header('Location: transaction_history.php');
-        exit;
-    } else {
-        echo "Error deleting expense.";
-    }
-}
-
-<?php
-require_once 'includes/db.php';
-require_once 'includes/functions.php';
-
-session_start();
-
-if (!isset($_SESSION['user_id'])) {
-    $_SESSION['error_message'] = "You must be logged in to access this page.";
-    header('Location: login.php');
-    exit;
-}
-
-$transaction = null;
-$success_message = '';
-$error_message = '';
-
-if (isset($_GET['id'])) {
-    $transaction = get_transaction_by_id($_GET['id']);
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'];
-    $amount = $_POST['amount'];
-    $description = $_POST['description'];
-    $category = $_POST['category'];
-    $date = $_POST['date'];
-    $type = $_POST['type'];
-
-    if (update_transaction($id, $amount, $description, $category, $date, $type)) {
-        $success_message = "Transaction updated successfully.";
-        $transaction = get_transaction_by_id($id);
-    } else {
-        $error_message = "Error updating transaction.";
-    }
-}
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Transaction - W-Tracker</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-<body>
-    <div class="container">
-        <?php include 'includes/sidebar.php'; ?>
-        <div class="content">
-            <div class="form-container">
-                <div class="form-card">
-                    <h1>Edit Transaction</h1>
-                    <?php if ($success_message): ?>
-                        <p class="success"><?php echo $success_message; ?></p>
-                    <?php endif; ?>
-                    <?php if ($error_message): ?>
-                        <p class="error"><?php echo $error_message; ?></p>
-                    <?php endif; ?>
-                    
-                    <?php if ($transaction): ?>
-                    <form action="edit_transaction.php" method="post" class="transaction-form">
-                        <input type="hidden" name="id" value="<?php echo $transaction['id']; ?>">
-                        
-                        <div class="form-group">
-                            <label for="amount">Amount</label>
-                            <input type="number" id="amount" name="amount" value="<?php echo $transaction['amount']; ?>" required step="0.01">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="description">Description</label>
-                            <input type="text" id="description" name="description" value="<?php echo $transaction['description']; ?>" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="category">Category</label>
-                            <select id="category" name="category" required>
-                                <option value="Food" <?php echo $transaction['category'] == 'Food' ? 'selected' : ''; ?>>Food</option>
-                                <option value="Transportation" <?php echo $transaction['category'] == 'Transportation' ? 'selected' : ''; ?>>Transportation</option>
-                                <option value="Entertainment" <?php echo $transaction['category'] == 'Entertainment' ? 'selected' : ''; ?>>Entertainment</option>
-                                <option value="Other" <?php echo $transaction['category'] == 'Other' ? 'selected' : ''; ?>>Other</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="date">Date</label>
-                            <input type="date" id="date" name="date" value="<?php echo $transaction['date']; ?>" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="type">Type</label>
-                            <select id="type" name="type" required>
-                                <option value="expense" <?php echo $transaction['type'] == 'expense' ? 'selected' : ''; ?>>Expense</option>
-                                <option value="income" <?php echo $transaction['type'] == 'income' ? 'selected' : ''; ?>>Income</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="submit-btn">Update Transaction</button>
-                    </form>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script src="js/script.js"></script>
-</body>
-</html>
-
-
-<?php
-require_once 'includes/db.php';
-require_once 'includes/functions.php';
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    $_SESSION['error_message'] = "You must be logged in to access this page.";
-    header('Location: login.php');
-    exit;
-}
-$expenses = get_expenses();
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transaction History - W-Tracker</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-<body>
-    <div class="container">
-        <?php include 'includes/sidebar.php'; ?>
-        <div class="content">
-            <div class="history-container">
-                <div class="history-header">
-                    <h1>Transaction History</h1>
-                </div>
-
-                <div class="transaction-list">
-                    <?php foreach ($expenses as $expense): ?>
-                    <div class="transaction-card <?php echo $expense['type']; ?>">
-                        <div class="transaction-icon">
-                            <i class="bi <?php echo $expense['type'] == 'income' ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'; ?>"></i>
-                        </div>
-                        <div class="transaction-details">
-                            <h3><?php echo $expense['description']; ?></h3>
-                            <span class="category"><?php echo $expense['category']; ?></span>
-                            <span class="date"><?php echo date('d M Y', strtotime($expense['date'])); ?></span>
-                        </div>
-                        <div class="transaction-amount <?php echo $expense['type']; ?>">
-                            <span>Rp. <?php echo number_format($expense['amount'], 3); ?></span>
-                        </div>
-                        <div class="transaction-actions">
-                            <a href="edit_transaction.php?id=<?php echo $expense['id']; ?>" class="edit-btn">
-                                <i class="bi bi-pencil-fill"></i>
-                            </a>
-                            <a href="delete_transaction.php?id=<?php echo $expense['id']; ?>" class="delete-btn" onclick="return confirm('Are you sure you want to delete this transaction?')">
-                                <i class="bi bi-trash-fill"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/script.js"></script>
-</body>
-</html>
-
+// Function
 <?php
 function get_expenses() {
     global $conn;
@@ -711,6 +300,29 @@ $expenses = get_total_expenses();
 return $income - $expenses;
 }
 
+function change_user_password($user_id, $current_password, $new_password) {
+    global $conn;
+    
+    // Verify current password
+    $sql = "SELECT password FROM users WHERE id = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "i", $user_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $user = mysqli_fetch_assoc($result);
+    
+    if (password_verify($current_password, $user['password'])) {
+        // Update to new password
+        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+        $sql = "UPDATE users SET password = ? WHERE id = ?";
+        $stmt = mysqli_prepare($conn, $sql);
+        mysqli_stmt_bind_param($stmt, "si", $hashed_password, $user_id);
+        return mysqli_stmt_execute($stmt);
+    }
+    
+    return false;
+}
+
 function login($username, $password) {
     global $conn;
     
@@ -790,7 +402,587 @@ function register($username, $password) {
     return false;
 }
 
+// Sidebar
+<?php
+// Start the session if it hasn't been started already
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+?>
 
+<div class="sidebar">
+    <h2><i class="bi bi-wallet2"></i> W-Tracker</h2>
+    <div class="user-profile">
+        <div class="profile-image">
+            <i class="bi bi-person-circle"></i>
+        </div>
+        <div class="user-info">
+            <span class="username"><?php echo $_SESSION['username']; ?></span>
+        </div>
+    </div>
+    <ul>
+        <?php if (isset($_SESSION['user_id'])): ?>
+            <li><a href="index.php"><i class="bi bi-speedometer2"></i> <span>Dashboard</span></a></li>
+            <li><a href="add_transaction.php"><i class="bi bi-plus-circle"></i> <span>Add Transaction</span></a></li>
+            <li><a href="transaction_history.php"><i class="bi bi-clock-history"></i> <span>Transaction History</span></a></li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle">
+                    <i class="bi bi-gear"></i> <span>Account Settings</span>
+                    <i class="bi bi-chevron-down"></i>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="change_password.php"><i class="bi bi-lock"></i> <span>Change Password</span></a></li>
+                    <li><a href="./auth/logout.php" class="logout-btn"><i class="bi bi-box-arrow-right"></i> <span>Logout</span></a></li>
+                </ul>
+            </li>
+        <?php endif; ?>
+    </ul>
+</div>
+
+// Index
+<?php
+
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error_message'] = "You must be logged in to access this page.";
+    header('Location: auth/login.php');
+    exit;
+}
+require_once 'includes/db.php';
+require_once 'includes/functions.php';
+
+$total_income = get_total_income();
+$total_expenses = get_total_expenses();
+$balance = get_balance();
+$recent_transactions = get_recent_transactions(10);
+$total_transactions = get_total_transactions();
+
+// Prepare data for transaction chart
+$dates = [];
+$amounts = [];
+foreach ($recent_transactions as $transaction) {
+    $dates[] = $transaction['date'];
+    $amounts[] = $transaction['type'] == 'income' ? $transaction['amount'] : -$transaction['amount'];
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - W-Tracker</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <?php include 'includes/sidebar.php'; ?>
+        <div class="content">
+            <h1>Dashboard</h1>
+            <div class="dashboard-summary">
+                <div class="summary-box income">
+                    <i class="bi bi-piggy-bank"></i>
+                    <h2>Total Income</h2>
+                    <p>RP. <?php echo number_format($total_income, 3); ?></p>
+                </div>
+                <div class="summary-box expenses">
+                    <i class="bi bi-cash-stack"></i>
+                    <h2>Total Expenses</h2>
+                    <p>Rp. <?php echo number_format($total_expenses, 3); ?></p>
+                </div>
+                <div class="summary-box balance">
+                    <i class="bi bi-wallet2"></i>
+                    <h2>Balance</h2>
+                    <p>Rp. <?php echo number_format($balance, 3); ?></p>
+                </div>
+                <div class="summary-box total-transactions">
+                    <i class="bi bi-list-ul"></i>
+                    <h2>Total Transactions</h2>
+                    <p><?php echo $total_transactions; ?></p>
+                </div>
+            </div>
+            <div class="chart-container">
+            <div class="transaction-chart-box">
+            <h2>Recent Transactions</h2>
+            <canvas id="transactionChart"></canvas>
+            </div>
+            <div class="balance-chart-box">
+            <h2>Balance Overview</h2>
+            <canvas id="balanceChart"></canvas>
+    </div>
+</div>
+        </div>
+    </div>
+    <script>
+       // Transaction Chart
+        const transactionCtx = document.getElementById('transactionChart').getContext('2d');
+        const transactionChart = new Chart(transactionCtx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode(array_reverse($dates)); ?>,
+                datasets: [{
+                    label: 'Transaction Amount',
+                    data: <?php echo json_encode(array_reverse($amounts)); ?>,
+                    backgroundColor: function(context) {
+                        const value = context.dataset.data[context.dataIndex];
+                        return value < 0 ? 'rgba(231, 76, 60, 0.8)' : 'rgba(46, 204, 113, 0.8)';
+                    },
+                    borderColor: function(context) {
+                        const value = context.dataset.data[context.dataIndex];
+                        return value < 0 ? 'rgba(231, 76, 60, 1)' : 'rgba(46, 204, 113, 1)';
+                    },
+                    borderWidth: 1,
+                    barThickness: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                     }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        //Chart Balance
+        const balanceCtx = document.getElementById('balanceChart').getContext('2d');
+        const balanceChart = new Chart(balanceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Income', 'Expenses'],
+                datasets: [{
+                    data: [<?php echo $total_income; ?>, <?php echo $total_expenses; ?>],
+                    backgroundColor: [
+                        'rgba(46, 204, 113, 0.8)',
+                        'rgba(231, 76, 60, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(46, 204, 113, 1)',
+                        'rgba(231, 76, 60, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    title: {
+                        display: true,
+                    }
+                }
+            }
+        });
+    </script>
+    <script src="js/script.js"></script>
+</body>
+</html>
+
+// Change Password
+<?php
+session_start();
+require_once 'includes/db.php';
+require_once 'includes/functions.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: auth/login.php');
+    exit;
+}
+
+$success_message = '';
+$error_message = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $current_password = $_POST['current_password'];
+    $new_password = $_POST['new_password'];
+    $confirm_password = $_POST['confirm_password'];
+    
+    if ($new_password !== $confirm_password) {
+        $error_message = "New passwords do not match.";
+    } else if (change_user_password($_SESSION['user_id'], $current_password, $new_password)) {
+        $success_message = "Password changed successfully!";
+    } else {
+        $error_message = "Current password is incorrect.";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Password - W-Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <div class="container">
+        <?php include 'includes/sidebar.php'; ?>
+        <div class="content">
+            <div class="password-container">
+                <div class="password-card">
+                    <div class="password-header">
+                        <i class="bi bi-shield-lock"></i>
+                        <h1>Change Password</h1>
+                    </div>
+
+                    <?php if ($success_message): ?>
+                        <div class="alert success"><?php echo $success_message; ?></div>
+                    <?php endif; ?>
+
+                    <?php if ($error_message): ?>
+                        <div class="alert error"><?php echo $error_message; ?></div>
+                    <?php endif; ?>
+
+                    <form action="change_password.php" method="post" class="password-form">
+                        <div class="form-group">
+                            <label for="current_password">Current Password</label>
+                            <div class="input-icon">
+                                <i class="bi bi-lock"></i>
+                                <input type="password" id="current_password" name="current_password" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new_password">New Password</label>
+                            <div class="input-icon">
+                                <i class="bi bi-lock-fill"></i>
+                                <input type="password" id="new_password" name="new_password" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm_password">Confirm New Password</label>
+                            <div class="input-icon">
+                                <i class="bi bi-lock-fill"></i>
+                                <input type="password" id="confirm_password" name="confirm_password" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="change-btn">Change Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+// Add Transaction
+<?php
+require_once 'includes/db.php';
+require_once 'includes/functions.php';
+
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error_message'] = "You must be logged in to access this page.";
+    header('Location: login.php');
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $amount = $_POST['amount'];
+    $description = $_POST['description'];
+    $category = $_POST['category'];
+    $date = $_POST['date'];
+    $type = $_POST['type'];
+
+    if (add_transaction($amount, $description, $category, $date, $type)) {
+        $success_message = "Transaction added successfully.";
+    } else {
+        $error_message = "Error adding transaction.";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Transaction - W-Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+<div class="container">
+    <?php include 'includes/sidebar.php'; ?>
+    <div class="content">
+        <div class="form-container">
+            <div class="form-card">
+                <h1>Add Transaction</h1>
+                <?php if (isset($success_message)): ?>
+                    <p class="success"><?php echo $success_message; ?></p>
+                <?php endif; ?>
+                <?php if (isset($error_message)): ?>
+                    <p class="error"><?php echo $error_message; ?></p>
+                <?php endif; ?>
+                
+                <form action="add_transaction.php" method="post" class="transaction-form">
+                    <div class="form-group">
+                        <label for="amount">Amount</label>
+                        <input type="number" id="amount" name="amount" placeholder="Enter amount" required step="0.01">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" name="description" placeholder="Enter description" required autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category" required>
+                            <option value="">Select Category</option>
+                            <option value="Food">Food</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input type="date" id="date" name="date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="type">Type</label>
+                        <select id="type" name="type" required>
+                            <option value="expense">Expense</option>
+                            <option value="income">Income</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="submit-btn">Add Transaction</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
+
+// Edit Transaction
+<?php
+require_once 'includes/db.php';
+require_once 'includes/functions.php';
+
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error_message'] = "You must be logged in to access this page.";
+    header('Location: login.php');
+    exit;
+}
+
+$transaction = null;
+$success_message = '';
+$error_message = '';
+
+if (isset($_GET['id'])) {
+    $transaction = get_transaction_by_id($_GET['id']);
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = $_POST['id'];
+    $amount = $_POST['amount'];
+    $description = $_POST['description'];
+    $category = $_POST['category'];
+    $date = $_POST['date'];
+    $type = $_POST['type'];
+
+    if (update_transaction($id, $amount, $description, $category, $date, $type)) {
+        $success_message = "Transaction updated successfully.";
+        $transaction = get_transaction_by_id($id);
+    } else {
+        $error_message = "Error updating transaction.";
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Transaction - W-Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <div class="container">
+        <?php include 'includes/sidebar.php'; ?>
+        <div class="content">
+            <div class="form-container">
+                <div class="form-card">
+                    <h1>Edit Transaction</h1>
+                    <?php if ($success_message): ?>
+                        <p class="success"><?php echo $success_message; ?></p>
+                    <?php endif; ?>
+                    <?php if ($error_message): ?>
+                        <p class="error"><?php echo $error_message; ?></p>
+                    <?php endif; ?>
+                    
+                    <?php if ($transaction): ?>
+                    <form action="edit_transaction.php" method="post" class="transaction-form">
+                        <input type="hidden" name="id" value="<?php echo $transaction['id']; ?>">
+                        
+                        <div class="form-group">
+                            <label for="amount">Amount</label>
+                            <input type="number" id="amount" name="amount" value="<?php echo $transaction['amount']; ?>" required step="0.01">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <input type="text" id="description" name="description" value="<?php echo $transaction['description']; ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select id="category" name="category" required>
+                                <option value="Food" <?php echo $transaction['category'] == 'Food' ? 'selected' : ''; ?>>Food</option>
+                                <option value="Transportation" <?php echo $transaction['category'] == 'Transportation' ? 'selected' : ''; ?>>Transportation</option>
+                                <option value="Entertainment" <?php echo $transaction['category'] == 'Entertainment' ? 'selected' : ''; ?>>Entertainment</option>
+                                <option value="Other" <?php echo $transaction['category'] == 'Other' ? 'selected' : ''; ?>>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="date">Date</label>
+                            <input type="date" id="date" name="date" value="<?php echo $transaction['date']; ?>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="type">Type</label>
+                            <select id="type" name="type" required>
+                                <option value="expense" <?php echo $transaction['type'] == 'expense' ? 'selected' : ''; ?>>Expense</option>
+                                <option value="income" <?php echo $transaction['type'] == 'income' ? 'selected' : ''; ?>>Income</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="submit-btn">Update Transaction</button>
+                    </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/script.js"></script>
+</body>
+</html>
+
+// Transaction History
+<?php
+require_once 'includes/db.php';
+require_once 'includes/functions.php';
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error_message'] = "You must be logged in to access this page.";
+    header('Location: login.php');
+    exit;
+}
+$expenses = get_expenses();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History - W-Tracker</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <div class="container">
+        <?php include 'includes/sidebar.php'; ?>
+        <div class="content">
+            <div class="history-container">
+                <div class="history-header">
+                    <h1>Transaction History</h1>
+                </div>
+                <div class="transaction-list">
+                    <?php foreach ($expenses as $expense): ?>
+                    <div class="transaction-card <?php echo $expense['type']; ?>">
+                    <div class="transaction-icon">
+                    <i class="bi <?php echo $expense['type'] == 'income' ? 'bi-arrow-up-circle-fill' : 'bi-arrow-down-circle-fill'; ?>"></i>
+                    </div>
+                    <div class="transaction-details">
+                    <h3><?php echo htmlspecialchars($expense['description']); ?></h3>
+                    <span class="category"><?php echo htmlspecialchars($expense['category']); ?></span>
+                    <span class="date"><?php echo date('d M Y', strtotime($expense['date'])); ?></span>
+                    </div>
+                    <div class="transaction-amount <?php echo $expense['type']; ?>">
+                    <?php echo $expense['type'] == 'income' ? '+' : '-'; ?> Rp. <?php echo number_format($expense['amount'], 3); ?>
+                    </div>
+                    <div class="transaction-actions">
+                    <a href="edit_transaction.php?id=<?php echo $expense['id']; ?>" class="edit-btn" title="Edit">
+                    <i class="bi bi-pencil-fill"></i>
+                    </a>
+                    <a href="delete_transaction.php?id=<?php echo $expense['id']; ?>" class="delete-btn" title="Delete" 
+                    onclick="return confirm('Are you sure you want to delete this transaction?')">
+                    <i class="bi bi-trash-fill"></i>
+                    </a>
+                    </div>
+                    </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
+
+//Delete Transaction
+<?php
+require_once 'includes/db.php';
+require_once 'includes/functions.php';
+
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error_message'] = "You must be logged in to access this page.";
+    header('Location: login.php');
+    exit;
+}
+
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    if (delete_expense($id)) {
+        header('Location: transaction_history.php');
+        exit;
+    } else {
+        echo "Error deleting expense.";
+    }
+}
+
+// Style 
 body {
     font-family: 'Arial', sans-serif;
     line-height: 1.6;
@@ -937,66 +1129,93 @@ button:hover {
     margin-bottom: 30px;
 }
 
-.filter-section {
+.transaction-actions {
     display: flex;
-    gap: 15px;
-    margin-top: 20px;
+    gap: 10px;
+    margin-left: 15px;
 }
 
-.filter-section input,
-.filter-section select {
-    padding: 10px;
-    border: 1px solid #ddd;
+.edit-btn,
+.delete-btn {
+    padding: 8px;
     border-radius: 8px;
-    font-size: 14px;
-}
-
-.filter-section input {
-    flex: 1;
-}
-
-.transaction-list {
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
     display: flex;
-    flex-direction: column;
-    gap: 15px;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.edit-btn {
+    background-color: #3498db;
+    color: white;
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
 }
 
 .transaction-card {
-    display: flex;
-    align-items: center;
+    position: relative;
     padding: 20px;
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-.transaction-card:hover {
-    transform: translateY(-2px);
+.transaction-amount {
+    font-weight: bold;
+    font-size: 18px;
+    margin: 0 20px;
 }
 
-.transaction-icon {
-    font-size: 24px;
-    margin-right: 20px;
-}
-
-.transaction-icon .bi-arrow-up-circle-fill {
+.transaction-amount.income {
     color: #2ecc71;
 }
 
-.transaction-icon .bi-arrow-down-circle-fill {
+.transaction-amount.expense {
     color: #e74c3c;
-}
-
-.transaction-details {
-    flex: 1;
 }
 
 .transaction-details h3 {
     margin: 0;
-    font-size: 16px;
     color: #2c3e50;
+    font-size: 16px;
 }
+
+.transaction-details .category {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #f0f2f5;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 5px;
+}
+
+.transaction-details .date {
+    color: #95a5a6;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
 
 .category {
     display: inline-block;
@@ -1170,6 +1389,7 @@ button:hover {
 }
 
 
+/**Sidebar**/
 .container {
     display: flex;
     min-height: 100vh;
@@ -1235,7 +1455,61 @@ button:hover {
     padding: 20px;
     transition: all 0.3s;
 }
+.user-profile {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
+.profile-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-image i {
+    font-size: 30px;
+    color: #fff;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.username {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    display: block;
+}
+
+.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dropdown-menu {
+    display: none;
+    padding-left: 20px;
+    margin-top: 5px;
+}
+
+.dropdown-menu.active {
+    display: block;
+}
+
+.dropdown-menu li a {
+    padding: 8px 15px;
+    font-size: 14px;
+}
 @media (max-width: 768px) {
     .sidebar {
         width: 70px;
@@ -1261,7 +1535,18 @@ button:hover {
     .content {
         margin-left: 70px;
     }
+    .user-profile {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .username {
+        margin-top: 10px;
+    }
 }
+
+
+/*Box*/
 
 .content {
     flex: 1;
@@ -1331,22 +1616,65 @@ button:hover {
     color: #fff;
 }
 
-.recent-transactions {
+/*Chart*/
+.chart-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping for better mobile responsiveness */
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.transaction-chart-box,
+.balance-chart-box {
+    flex: 1;
+    min-width: 100px; /* Ensures minimum width before shrinking */
     background-color: #fff;
     border-radius: 15px;
     padding: 20px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.recent-transactions h2 {
-    margin-bottom: 20px;
+.transaction-chart-box h2,
+.balance-chart-box h2 {
     color: #2c3e50;
+    text-align: center;
+    font-size: 1.2rem; 
+    margin-bottom: -25px;
 }
 
 #transactionChart {
-    width: 100%;
-    height: 300px;
+    height: 350px;
+    width: 350px ;
 }
+
+#balanceChart {
+    height: 350px; 
+    width: 350px; 
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        flex-direction: column;
+        gap: 20px; 
+    }
+    
+    .transaction-chart-box,
+    .balance-chart-box {
+        width: 100%;
+        height: 350px; /* Reduced height for better fit on mobile */
+    }
+
+    .transaction-chart-box h2,
+    .balance-chart-box h2 {
+        font-size: 1rem; /* Reduced font size on mobile */
+    }
+}
+
+
 
 
 .total-expenses, .recent-transactions {
@@ -1404,140 +1732,237 @@ table tr.income {
 table tr.expense {
     background-color: #fff1f0;
 }
+
+/* Auth Styles */
 .auth-body {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f5f5f5;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
 }
 
 .auth-container {
     width: 100%;
-    max-width: 400px;
+    max-width: 380px;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
 }
 
 .auth-card {
     background: white;
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    width: 100%;
 }
 
 .auth-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 32px;
 }
 
 .auth-header i {
-    font-size: 48px;
-    color: #667eea;
-    margin-bottom: 20px;
+    font-size: 40px;
+    color: #4F46E5;
+    margin-bottom: 16px;
 }
 
 .auth-header h1 {
     font-size: 24px;
-    color: #2d3748;
-    margin-bottom: 10px;
+    color: #111827;
+    margin-bottom: 8px;
+    font-weight: 600;
 }
 
 .auth-header p {
-    color: #718096;
+    color: #6B7280;
     font-size: 14px;
+    margin: 0;
 }
 
 .auth-form .form-group {
     margin-bottom: 20px;
 }
 
-.form-group input{
-    width: -50px;
-}
 .input-icon {
     position: relative;
+    margin-bottom: 20px;
+    width: 100%;
 }
 
 .input-icon i {
     position: absolute;
-    left: 15px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #a0aec0;
+    color: #9CA3AF;
+    font-size: 16px;
 }
 
 .input-icon input {
     width: 100%;
-    padding: 15px 15px 15px 45px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
+    padding: 12px 12px 12px 40px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
     font-size: 14px;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
 .input-icon input:focus {
-    border-color: #667eea;
+    border-color: #4F46E5;
     outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .auth-button {
     width: 100%;
-    padding: 15px;
-    background: linear-gradient(to right, #667eea, #764ba2);
+    padding: 12px;
+    background: #4F46E5;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     color: white;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: transform 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .auth-button:hover {
-    transform: translateY(-2px);
+    background: #4338CA;
+    transform: translateY(-1px);
+}
+
+.auth-button:active {
+    transform: translateY(0);
 }
 
 .auth-footer {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 24px;
+}
+
+.auth-footer p {
+    color: #6B7280;
+    font-size: 14px;
 }
 
 .auth-footer a {
-    color: #667eea;
+    color: #4F46E5;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 500;
+    transition: color 0.2s ease;
 }
 
 .auth-footer a:hover {
-    text-decoration: underline;
+    color: #4338CA;
 }
 
 .alert {
-    padding: 15px;
-    border-radius: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
     margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-size: 14px;
 }
 
 .alert.success {
-    background: #c6f6d5;
-    color: #2f855a;
+    background: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
 }
 
 .alert.error {
-    background: #fed7d7;
-    color: #c53030;
+    background: #FEF2F2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
 }
 
+/* Responsive Design */
 @media (max-width: 480px) {
+    .auth-container {
+        padding: 16px;
+    }
+    
     .auth-card {
-        padding: 30px 20px;
+        padding: 24px;
+    }
+    
+    .auth-header h1 {
+        font-size: 20px;
+    }
+    
+    .auth-header i {
+        font-size: 36px;
     }
 }
 
+/* Change Pw Styles */
+.password-container {
+    padding: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+.password-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.password-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.password-header i {
+    font-size: 48px;
+    color: #3498db;
+}
+.password-form {
+    max-width: 500px;
+    margin: 0 auto;
+}
+.change-btn {
+    width: 100%;
+    padding: 12px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+}
+.change-btn:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    
+    .password-container {
+        padding: 15px;
+    }
+    
+    .password-card {
+        padding: 20px;
+    }
+}
+
+
+// Script 
+// Add this to your existing script.js
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdownToggle = document.querySelector('.dropdown-toggle');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    
+    dropdownToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        dropdownMenu.classList.toggle('active');
+        this.querySelector('.bi-chevron-down').classList.toggle('bi-chevron-up');
+    });
+});

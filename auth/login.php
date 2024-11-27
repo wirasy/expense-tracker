@@ -1,33 +1,47 @@
 <?php
 session_start();
-
-// If user is already logged in, redirect to dashboard
-if (isset($_SESSION['user_id'])) {
-    header("Location: ../index.php");
-    exit;
-}
-
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 
 $error_message = "";
 $success_message = "";
 
-if (isset($_SESSION['success_message'])) {
-    $success_message = $_SESSION['success_message'];
-    unset($_SESSION['success_message']);
-}
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    if (login($username, $password)) {
-        header("Location: ../index.php");
-        exit;
+    // Check if username exists
+    $sql = "SELECT * FROM users WHERE username = ?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "s", $username);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    if ($user = mysqli_fetch_assoc($result)) {
+        // Verify password
+        if (password_verify($password, $user['password'])) {
+            // Set session variables
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            
+            // Check if user is admin
+            if ($user['is_admin'] == 1) {
+                header("Location: ../admin/dashboard.php");
+            } else {
+                header("Location: ../index.php");
+            }
+            exit;
+        } else {
+            $error = "Invalid password";
+        }
     } else {
-        $error_message = "Invalid username or password.";
+        $error = "Username not found";
     }
+}
+
+if (isset($_SESSION['success_message'])) {
+    $success_message = $_SESSION['success_message'];
+    unset($_SESSION['success_message']);
 }
 
 // Check for error message from other pages
@@ -67,7 +81,7 @@ if (isset($_SESSION['error_message'])) {
                 <div class="form-group">
                     <div class="input-icon">
                         <i class="bi bi-person"></i>
-                        <input type="text" name="username" placeholder="Username" required>
+                        <input type="text" name="username" placeholder="Username" required >
                     </div>
                 </div>
 
