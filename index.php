@@ -29,7 +29,8 @@ foreach ($recent_transactions as $transaction) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - W-Tracker</title>
+    <title>Dashboard - We Tracker</title>
+    <link rel="icon" type="image/x-icon" href="asset/w.ico">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -18,7 +18,8 @@ $users = get_all_users();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - W-Tracker</title>
+    <title>Admin Dashboard - We Tracker</title>
+    <link rel="icon" type="image/x-icon" href="../asset/w.ico">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
@@ -44,11 +45,11 @@ $users = get_all_users();
                             <td><?php echo $user['username']; ?></td>
                             <td><?php echo $user['is_admin'] ? 'Admin' : 'User'; ?></td>
                             <td>
-                                <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="edit-btn">
+                                <a href="edit_user.php?id=<?php echo $user['id']; ?>" class="edit-btn-">
                                     <i class="bi bi-pencil-fill"></i>
                                 </a>
                                 <a href="delete_user.php?id=<?php echo $user['id']; ?>" 
-                                   class="delete-btn" 
+                                   class="delete-btn-" 
                                    onclick="return confirm('Are you sure you want to delete this user?')">
                                     <i class="bi bi-trash-fill"></i>
                                 </a>
